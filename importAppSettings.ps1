@@ -4,6 +4,7 @@ param(
     [string]$KeyVaultName,
     [Parameter(Position = 1)]
     [string]$InputFolder = "$HOME/Desktop/appSettings/dev1",
+    [string]$FilePath,
     [string]$Subscription = "NIS.dev1"
 )
 
@@ -12,7 +13,12 @@ if (-not (Get-Module -ListAvailable -Name Az.KeyVault)) {
     exit 1
 }
 
-if (-not (Test-Path -Path $InputFolder)) {
+if ($FilePath) {
+    if (-not (Test-Path -Path $FilePath -PathType Leaf)) {
+        Write-Error "File '$FilePath' does not exist."
+        exit 1
+    }
+} elseif (-not (Test-Path -Path $InputFolder -PathType Container)) {
     Write-Error "Input folder '$InputFolder' does not exist."
     exit 1
 }
@@ -27,10 +33,14 @@ try {
     exit 1
 }
 
-$files = Get-ChildItem -Path $InputFolder -Filter *.json -File
-if (-not $files) {
-    Write-Warning "No JSON files found in '$InputFolder'. Nothing to import."
-    exit 0
+if ($FilePath) {
+    $files = Get-Item -LiteralPath $FilePath
+} else {
+    $files = Get-ChildItem -Path $InputFolder -Filter *.json -File
+    if (-not $files) {
+        Write-Warning "No JSON files found in '$InputFolder'. Nothing to import."
+        exit 0
+    }
 }
 
 foreach ($file in $files) {
