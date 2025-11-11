@@ -1,11 +1,16 @@
-az account set --subscription "NIS.dev1"
-KV_NAME="kv-vzp-dev1-we-aks-001"
-OUTPUT_DIR="./appSettings/dev1"
+#!/usr/bin/env bash
+set -euo pipefail
 
+SUBSCRIPTION="NIS.dev1"
+SOURCE_KV="<source-keyvault-name>"
+OUTPUT_DIR="./kv-secrets"
+
+az account set --subscription "$SUBSCRIPTION"
 mkdir -p "$OUTPUT_DIR"
 
+echo "Exporting secrets from $SOURCE_KV into $OUTPUT_DIR"
 az keyvault secret list \
-  --vault-name "$KV_NAME" \
+  --vault-name "$SOURCE_KV" \
   --query '[].id' -o tsv |
 while read -r secret_id; do
   name=$(basename "$secret_id")
